@@ -167,6 +167,14 @@ def refine_ocr_results(results: dict = None):
     
     return results
 
+def perspective_transoform(image, source_points):
+    dest_points = np.float32([[0,0], [3000,0], [3000,1800], [0,1800]])
+    M = cv2.getPerspectiveTransform(source_points, dest_points)
+    dst = cv2.warpPerspective(image, M, (3000, 1800))
+    # plt.subplots(figsize = (10, 10))
+    # plt.imshow(dst[:, :, ::-1])
+    # plt.axis('off')
+    cv2.imwrite("aligned.jpg", dst)
 
 if __name__ == "__main__":
     pass
