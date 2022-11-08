@@ -1,1 +1,1 @@
-python3 main.py --image data/examples/cropped_giang.jpg
+python3 main.py --image data/raw_images/2.jpg
