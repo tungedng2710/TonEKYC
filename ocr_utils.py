@@ -80,6 +80,7 @@ def check_name(text: str = None):
 
 def check_date_format(text: str = None):
     text = re.sub('[^A-Za-z0-9]+', '', text)
+    # text = re.findall(r'\d+', text)[-1]
     format = "%d%m%Y"
     res = True
     try:

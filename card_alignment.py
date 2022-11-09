@@ -134,15 +134,16 @@ def align_image(img_path: str = None):
 
         final_img = findFaceID.changeOrientationUntilFaceFound(img1, 60)
         
-        cv2.imwrite("final1.jpg", final_img[:,:,::-1])
         if(final_img is None):
             print(f"No face detected in identity card {filename}")
 
         final_img = correctPerspective(final_img)
         final_img = cv2.resize(final_img, (1712, 1078))
         cv2.imwrite("temp.jpg", final_img[:,:,::-1])
+        return True
     except:
         print("Something wrong!")
+        return False
 
 if '__main__' == __name__:
     
@@ -169,7 +170,7 @@ if '__main__' == __name__:
     
             final_img = findFaceID.changeOrientationUntilFaceFound(img1, args.rotation_interval)
             
-            cv2.imwrite("final1.jpg", final_img[:,:,::-1])
+            # cv2.imwrite("final1.jpg", final_img[:,:,::-1])
             if(final_img is None):
                 print(f"No face detected in identity card {filename}")
                 break

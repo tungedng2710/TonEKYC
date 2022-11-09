@@ -89,7 +89,14 @@ def match_keys_values(detections: dict = None,
     line = ""
     for text in detections_smaller.keys():
         line += ' '+text
-    results["Place of residence"] = line.split("residence")[1].replace(':','').lstrip()
+
+    similarities = []
+    for word in line.split():
+        similarities.append(similar(word, "residence"))
+    word = line.split()[argmax(similarities)]
+    line = line.replace(word, "residence")
+
+    results["Place of residence"] = line.split("residence")[1]
     os.remove("smaller.jpg")
 
     return refine_ocr_results(results)
