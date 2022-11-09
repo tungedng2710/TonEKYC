@@ -13,7 +13,7 @@ if you want to dump the results into ```json``` or ```csv``` file, just add argu
 ## Card alignment
 Key-Information extractor requires an aligned card. Some traditional digital image processing methods are applied to perspective transform raw images. Alignment is integrated into the given pipeline.
 
-Disclaiming: The card alignment process is still quite silly and naive because I'm researching deep models to perform it. Therefore, I have used Dlib and Haar face detection model to do it instead, it is better to choose a rotation angle of less than 30 degrees and the card should be put on a dark background.
+Disclaiming: The card alignment process is still quite silly and naive because I'm researching deep models to perform it. Therefore, I have used Dlib and Haar face detection model and an edge detector to do it instead, it is better to choose a rotation angle of less than 30 degrees and the card should be put on a dark background.
 
 ## Text detection and OCR
 The OCR comes from the [EasyOCR](https://github.com/JaidedAI/EasyOCR), which is a vigorous OCR library supporting variety languages such as Vietnamese.  
