@@ -4,6 +4,7 @@
 **Prerequisite**
 * python 3.9 or higher
 * Ubuntu 18 or higher
+
 To extract information from an image of identity card, just run the script below
 ```bat
 python3 main.py --image [path/to/image] 
