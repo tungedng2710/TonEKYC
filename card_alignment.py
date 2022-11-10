@@ -163,6 +163,8 @@ if '__main__' == __name__:
     nearestBox = NearestBox(distance_thresh = args.neighbor_box_distance, draw_line=False)
     face_detector = detect_face.face_factory(face_model = args.face_recognition)
     findFaceID = face_detector.get_face_detector()
+    if not os.path.exists("data/aligned"):
+        os.makedirs("data/aligned")
     for filename in sorted(os.listdir(Folder)):
         try:
             img = cv2.imread(os.path.join(Folder,filename))

@@ -1,7 +1,7 @@
 import os
 from utils import *
 import numpy as np
-from ocr_utils import *
+from utils.ocr_utils import *
 
 def match_keys_values(detections: dict = None,
                       image: np.ndarray = None):
