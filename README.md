@@ -1,4 +1,4 @@
-# TonEKYC: a naive Vietnamese identity card reader 
+# TonEKYC: Vietnamese identity card reader 
 
 ## TODOs
 - [ ] Use graph convolutional neural network for KIE
