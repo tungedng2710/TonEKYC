@@ -1,5 +1,11 @@
 # TonEKYC: a naive Vietnamese identity card reader 
 
+## TODOs
+- [ ] Use graph convolutional neural network for KIE
+- [ ] Card alignment by deep models
+- [x] OCR and extract information based on rules
+- [x] Card alignment based on traditional digital image processing
+
 ## Instant usage
 **Prerequisite**
 * python 3.9 or higher
