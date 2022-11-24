@@ -1,5 +1,5 @@
 from utils import *
-from ocr import *
+from feat_ext_templatebase import *
 import argparse
 import json
 import cv2
