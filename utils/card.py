@@ -7,6 +7,17 @@ import numpy as np
 from PIL import Image
 
 class Card():
+    """
+    Annotation must be created by labelme: https://github.com/wkentaro/labelme
+    Structure of data folders:
+    root_dir_name
+    --abcxyz.jpg (or any image extension such as png, jpeg)
+    --abcxyz.json  
+
+    Required arguments:
+    - root_dir (str): path to data folder
+    - annotation_path (str): path to annotation file (.json)
+    """
     def __init__(self,
                  root_dir: str = None,
                  annotation_path: str = None,
@@ -26,7 +37,7 @@ class Card():
         with open(annotation_path) as f:
             annotation = json.load(f)
         shapes = annotation["shapes"]
-        corners = ["top_left", "top_right", "bottom_left", "bottom_right"]
+        corners = ["top_left", "top_right", "bottom_right", "bottom_left"]
         for polygon in shapes:
             if polygon["group_id"] is None:
                 polygon["group_id"] = 0
@@ -44,56 +55,122 @@ class Card():
                 pass
         self.center = [(self.top_left[0]+self.bottom_right[0])/2.0,
                        (self.top_left[1]+self.bottom_right[1])/2.0]
-        self.keypoints
-        self.img_path = os.path.join(self.root_dir, annotation["imagePath"])
-        self.image = self.load(self.img_path)
+        self.skeleton = [[0,1], [1,2], [2,3], [3,0], [0,4], [1,4], [2,4], [3,4]]
+        self.keypoints = [tuple(self.top_left), 
+                          tuple(self.top_right), 
+                          tuple(self.bottom_right), 
+                          tuple(self.bottom_left), 
+                          tuple(self.center)]
+
+        extension = annotation["imagePath"].split('.')[1]
+        if extension != "jpg":
+            annotation["imagePath"] = annotation["imagePath"].replace(extension, "jpg")
+        self.image_path = os.path.join(self.root_dir, annotation["imagePath"])
+        self.image_name = annotation["imagePath"]
+        self.image = self.load(self.image_path)
         self.cropped_image = self.image.crop(tuple(self.bbox))
 
-    def load(self, img_path: str = None):
-        img = Image.open(img_path)
+    def load(self, image_path: str = None):
+        """
+        Load image with PIL, auto convert to RGB mode
+        """
+        img = Image.open(image_path)
         if img.mode != "RGB":
             img = img.convert('RGB')
         return img
 
-    def transform(self):
-        
-        pass
+    def convert_to_opencv(self):
+        open_cv_image = np.array(self.image)
+        image = open_cv_image[:, :, ::-1].copy() # RGB to BGR 
+        return image
 
     def visualize(self, 
-                  keypoints: bool = False,
-                  bbox: bool = False):
-        if (keypoints is False) and (bbox is False):
-            print("Nothing to show!")
-            print("Set the argument 'keypoints' or 'bbox' is True to visualize the sample")
-        image = cv2.imread(self.img_path)
+                  bbox: bool = True,
+                  keypoints: bool = True,
+                  skeleton: bool = False):
+        """
+        Draw annotation and show the sample image
+
+        Arguments:
+        - keypoints (bool): draw and show keypoints
+        - box (bool): draw and show bounding box
+        """
+        image = self.convert_to_opencv()
         green_bgr = (0, 255, 0)
         blue_bgr = (255, 0, 0)
         red_bgr = (0, 0, 255)
         yellow_bgr = (0, 255, 255)
         pink_bgr = (204, 0, 204)
+        points = self.keypoints
         if bbox:
             start_point = tuple(map(int, self.x1y1))
             end_point = tuple(map(int, self.x2y2))
             thickness = 2
             cv2.rectangle(image, start_point, end_point, green_bgr, thickness)
         if keypoints:
-            points = [self.top_left, self.top_right, self.bottom_right, self.bottom_left, self.center]
             colors = [green_bgr, blue_bgr, red_bgr, yellow_bgr, pink_bgr]
             for i in range(5):
                 point = tuple(map(int, points[i]))
-                radius = 3
-                thickness = 10
+                radius = 7
+                thickness = 20
                 color = colors[i]
                 image = cv2.circle(image, point, radius, color, thickness)
+        if skeleton:
+            for joint in self.skeleton:
+                start_point = tuple(map(int, points[joint[0]]))
+                end_point = tuple(map(int, points[joint[1]]))
+                navy_bgr = (128, 0, 0)
+                thickness = 3
+                cv2.line(image, start_point, end_point, navy_bgr, thickness) 
+
         plt.imshow(image[:,:,::-1])
         plt.show()
+    
+    def augment(self, 
+                background_dir: str = "./data/background",
+                max_card_width: float = 1000.0,
+                max_image_width: float = 2000.0,
+                angles: list = None,
+                save_image: bool = False):
+        if not os.path.exists(background_dir):
+            return self.image
+        if save_image:
+            save_dir = "data/augmented_images"
+            if not os.path.exists((save_dir)):
+                os.makedirs(save_dir)
+        if angles is None:
+            angles = [i*10 for i in range(-1,1)]
+        self.augmented_images = []
 
+        cropped_image = self.cropped_image
+        w, h = cropped_image.size
+        scale = max_card_width / w
+        cropped_image = cropped_image.resize((int(max_card_width), int(h*scale)))
+
+        for file_name in os.listdir(background_dir):
+            for angle in angles:
+                background = self.load(os.path.join(background_dir, file_name))
+                w, h = background.size
+                scale = max_image_width / w
+                background = background.resize((int(max_image_width), int(h*scale)))
+
+                # Rotate the card
+                mask = Image.new('L', cropped_image.size, 255)
+                front = cropped_image.rotate(angle, expand=True)
+                # Paste the rotated card on background
+                mask = mask.rotate(angle, expand=True)
+                background.paste(front, (400, 200), mask)
+                self.augmented_images.append(background)
+                if save_image:
+                    saved_path = os.path.join(save_dir, file_name.split('.')[0]+'_'+str(angle)+'_'+self.image_name)
+                    background.save(saved_path)
 
 if __name__ == "__main__":
-    root_dir = "data/cccd_kpts"
-    annotation_path = "data/cccd_kpts/5.json"
-    card1 = Card(root_dir=root_dir, 
+    root_dir = "data/cards"
+    annotation_path = "data/cards/16.json"
+    card = Card(root_dir=root_dir, 
                 annotation_path=annotation_path, 
                 group_id=0)
-    card1.visualize(bbox=True, keypoints=True)
-    # print(card1.top_left, card1.top_right)
+    # print(card.visualize(skeleton=True))
+    card.augment(save_image=False)
+    print(len(card.augmented_images))
