@@ -3,6 +3,7 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import tqdm
 
 from PIL import Image
 
@@ -68,6 +69,7 @@ class Card():
         self.image_path = os.path.join(self.root_dir, annotation["imagePath"])
         self.image_name = annotation["imagePath"]
         self.image = self.load(self.image_path)
+        self.image_size = self.image.size
         self.cropped_image = self.image.crop(tuple(self.bbox))
 
     def load(self, image_path: str = None):
@@ -139,31 +141,41 @@ class Card():
             if not os.path.exists((save_dir)):
                 os.makedirs(save_dir)
         if angles is None:
-            angles = [i*10 for i in range(-1,1)]
+            angles = [i*10 for i in range(-3,4)]
         self.augmented_images = []
 
         cropped_image = self.cropped_image
-        w, h = cropped_image.size
-        scale = max_card_width / w
-        cropped_image = cropped_image.resize((int(max_card_width), int(h*scale)))
+        cropped_image_size = cropped_image.size
+        scale = max_card_width / cropped_image_size[0]
+        cropped_image = cropped_image.resize((int(max_card_width), int(cropped_image_size[1]*scale)))
 
         for file_name in os.listdir(background_dir):
+            new_start_point = (400, 200)
             for angle in angles:
                 background = self.load(os.path.join(background_dir, file_name))
-                w, h = background.size
-                scale = max_image_width / w
-                background = background.resize((int(max_image_width), int(h*scale)))
+                background_size = background.size
+                scale = max_image_width / background_size[0]
+                background = background.resize((int(max_image_width), int(background_size[1]*scale)))
 
                 # Rotate the card
                 mask = Image.new('L', cropped_image.size, 255)
                 front = cropped_image.rotate(angle, expand=True)
                 # Paste the rotated card on background
                 mask = mask.rotate(angle, expand=True)
-                background.paste(front, (400, 200), mask)
+                background.paste(front, new_start_point, mask)
                 self.augmented_images.append(background)
                 if save_image:
                     saved_path = os.path.join(save_dir, file_name.split('.')[0]+'_'+str(angle)+'_'+self.image_name)
                     background.save(saved_path)
+
+
+def rotate_points(p, origin=(0, 0), degrees=0):
+    angle = np.deg2rad(degrees)
+    R = np.array([[np.cos(angle), -np.sin(angle)],
+                  [np.sin(angle),  np.cos(angle)]])
+    o = np.atleast_2d(origin)
+    p = np.atleast_2d(p)
+    return np.squeeze((R @ (p.T-o.T) + o.T).T)
 
 if __name__ == "__main__":
     root_dir = "data/cards"
@@ -172,5 +184,6 @@ if __name__ == "__main__":
                 annotation_path=annotation_path, 
                 group_id=0)
     # print(card.visualize(skeleton=True))
-    card.augment(save_image=False)
-    print(len(card.augmented_images))
+    # card.augment(angles=[10], save_image=True)
+    # card.visualize(skeleton=True)
+    print(card.bbox)
