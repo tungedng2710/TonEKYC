@@ -1,5 +1,7 @@
 # TonEKYC: Vietnamese identity card reader 
 
+[![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
+
 ## TODOs
 - [ ] Use graph convolutional neural network for KIE
 - [ ] Card alignment by deep models
